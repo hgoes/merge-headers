@@ -1,0 +1,9 @@
+Name:          merge-headers
+Version:       0.1
+Author:        Henning Günther
+Cabal-Version: >=1.8
+Build-Type:    Simple
+
+Executable merge-headers
+  Build-Depends: base,containers,language-c
+  Main-Is: Main.hs
