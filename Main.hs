@@ -5,10 +5,14 @@ import Data.Either
 import System.Environment
 import Language.C
 import Language.C.System.GCC
+import Data.List (sortBy)
+import Data.Ord
 
 mergeHeaders :: [CTranslUnit] -> CTranslUnit
 mergeHeaders units = let (mps,rests) = unzip [ generateTypeMap decl | CTranslUnit decl _ <- units ]
-                     in CTranslUnit ((Map.elems $ Map.unions mps)++concat rests) internalNode
+                         nmps = zipWith (\mp i -> fmap (\d -> (d,i)) mp) mps [0..]
+                         decls = (Map.elems $ Map.unions nmps)++concat (zipWith (\rest i -> fmap (\d -> (d,i)) rest) rests [0..])
+                     in CTranslUnit (fmap fst $ sortBy (comparing (\(d,i) -> (i,posOf d))) decls) internalNode
 
 generateTypeMap :: [CExtDecl] -> (Map String CExtDecl,[CExtDecl])
 generateTypeMap decls = let (mp,rest) = partitionEithers $ fmap (\decl -> case declName decl of
