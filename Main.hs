@@ -1,12 +1,14 @@
 module Main where
 
-import Data.Map as Map
+import Data.Map (Map)
+import qualified Data.Map as Map
 import Data.Either
 import System.Environment
 import Language.C
 import Language.C.System.GCC
 import Data.List (sortBy)
 import Data.Ord
+import Data.Either
 
 mergeHeaders :: [CTranslUnit] -> CTranslUnit
 mergeHeaders units = let (mps,rests) = unzip [ generateTypeMap decl | CTranslUnit decl _ <- units ]
@@ -24,14 +26,21 @@ declName :: CExtDecl -> Maybe String
 declName (CDeclExt (CDecl specs [(Just (CDeclr (Just ident) _ _ _ _),_,_)] _)) = Just $ identToString ident
 declName _ = Nothing
 
-getC :: FilePath -> IO CTranslUnit
-getC fp = do
-  res <- parseCFile (newGCC "gcc") Nothing [] fp
+getC :: [String] -> FilePath -> IO CTranslUnit
+getC args fp = do
+  res <- parseCFile (newGCC "gcc") Nothing args fp
   case res of
     Left err -> error $ show err
     Right unit -> return unit
 
+classifyArgument :: String -> Either FilePath String
+classifyArgument arg
+  | null arg        = Left arg
+  | head arg == '-' = Right arg
+  | otherwise       = Left arg
+
 main = do
   args <- getArgs
-  cunits <- mapM getC args
+  let (files,cpp_args) = partitionEithers $ fmap classifyArgument args
+  cunits <- mapM (getC cpp_args) files
   print $ pretty $ mergeHeaders cunits
