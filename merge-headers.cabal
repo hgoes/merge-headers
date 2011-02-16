@@ -5,5 +5,5 @@ Cabal-Version: >=1.8
 Build-Type:    Simple
 
 Executable merge-headers
-  Build-Depends: base,containers,language-c
+  Build-Depends: base,containers,language-c,bytestring
   Main-Is: Main.hs
